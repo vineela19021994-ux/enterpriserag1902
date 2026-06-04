@@ -61,7 +61,7 @@ def search_enterprise_knowledge(query : str,limit : int = 8):
 #    Qdrant collection : which vector collection to search 
 #    query_vector : embedding vector for user query 
 #    limit : How many results to return 
-#    with payload : metadata stored with vectors 
+#    with payload : JSON type of metadata
 
 #    Then format results :
 #    results.append : We add retrieved chunk text with source filename/document

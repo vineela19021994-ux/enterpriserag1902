@@ -1,3 +1,4 @@
+from fastapi.middleware.asyncexitstack import AsyncExitStackMiddleware
 import logfire 
 from langchain_groq import ChatGroq 
 from app.agents.state import AgentState 
@@ -78,3 +79,39 @@ def generate_node(state:AgentState):
         except Exception as e: 
             logfire.error(f"LLM Generation failed:{e}")
             raise e
+
+
+# 1) This is the final response generation node in agentic RAG system 
+#    Its job is : 
+#    generate final answer 
+#    use conversation history 
+#    optionally use retrieved documents 
+#    call the LLM 
+#    return assistant response 
+
+# 2) This function handles two scenarios : 
+#    Conversational Query => answer using memory/history 
+#    Technical Query => answer using RAG documents+history 
+
+# 3) This node recevies : shared agent state 
+#    Gets planner decision ie either "conversational" or "user query"
+#    Processes all previous messages except latest one
+#    Taking all the previous conversations and user query 
+
+#    If it is "conversational" , no retrieval needed 
+#    Use only memory and conversational history 
+
+#    If it is "technical" ,technical retrieval required
+#    max_context_chars = 25000 => This line sets the maximum amount of document context that can be 
+#                                 sent to the LLM 
+#                                 Because models have limits on input size , tokens/context length
+#        process retrieved chunks => They are retrieved earlier from Qdrant during retrieval stage 
+#                                    and stored in state["documents"] in retriever.py 
+#                                    The generate_node() function simply consumes those retrived chunks 
+
+#        Add chunks to final_context 
+#        Protects LLM call from overflow 
+#        Builds RAG prompt 
+#        Sends prompt to LLM 
+#        Returns => generated answer , updated status , assistant message
+

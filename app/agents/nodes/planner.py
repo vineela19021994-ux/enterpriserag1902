@@ -60,3 +60,56 @@ def planner_node(state : AgentState):
         'status':f"Technical research needed.Searching for:{decision}",
         "plan":["Intent : Technical",f"Search Term:{decision}"]
     }
+
+
+# 1) This code creates a planner agent node in your agentic RAG system.
+#    Its job is to decide :
+#    whether retrieval search is needed 
+#       OR 
+#    whether the response can be answered conversationally using memory/history
+
+# 2) Agent state is imported so every agent node follows the same shared memory structure while 
+#    processing the workflow.
+#    It ensures that the defined information is consistently stored and passed between different stages 
+#    of the agentic RAG pipelines.
+
+# 3) planner_node : 
+#    This node receives : current agent state as the input
+
+#    decides : conversational responses? [or] retrieval required?
+#    Creates an empty history string 
+
+#    Loops through old messages => Processes all messages except the last one 
+#    Why exclude last message ? Because it is the current user query .
+#    The latest message is separated from the conversation history so the planner can clearly distinguish 
+#    between prior context and the current user request. This avoids duplicating the latest query 
+#    inside the prompt and improves prompt clarity for the LLM . 
+#    state["messages"] => contains full chat history 
+
+#    This code separates previous conversation history from the latest user query . It formats 
+#    old messages into a readable history string while extracting the most recent message separately
+#    so the planner LLM can clearly distinguish between prior context and the current request.
+
+# 4) This prompt instructs the planner LLM to analyze conversation history and the latest user message 
+#    to determine whether the request can be answered conversationally from memory or requires 
+#    technical document retrieval . It also contraints the output format so downstream workflow routing 
+#    remains predictable and structured.
+
+# 5) decision : Groq model , sends prompt to the LLM 
+#               LLM returns either "conversational" or "user query"
+#    .content : LLM response object contains metadata , content 
+#               .content extracts only text response 
+
+# 6) If decision is "conversational" , Planner decided no retrieval needed . This can be answered 
+#    using memory/history only
+#    Returns updated agent state.
+
+#    Returned data : 
+#    current_query => no technical search query needed 
+#    Status => Indicates use conversation memory only 
+#    plan => shows workflow decision 
+
+# 7) For else condition : 
+#    If "not conversational" , planner decided technical retrieval required 
+#    Stores refined search query 
+#    Indicates retrieval pipeline should start 

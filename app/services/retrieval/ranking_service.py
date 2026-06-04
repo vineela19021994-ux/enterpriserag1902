@@ -1,3 +1,4 @@
+from json import encoder
 from time import time
 from _winapi import NeedCurrentDirectoryForExePath
 import time
@@ -27,6 +28,8 @@ def _get_ranker() -> Ranker:
     # Here we didnt mention any reranking model 
     # Flashrank automatically loads the default reranking model internally or another 
     #   compact ONNX reranker depending on the flashrank version
+    # It will be pulling up the model and it will be storing the relevant cache so that 
+    #  we dnt have to load the model again and again
 
 
     def rerank_documents(query : str , documents : list[str], top_n : int = 5) -> list[str]:
@@ -38,7 +41,9 @@ def _get_ranker() -> Ranker:
         FlashRanker uses a cross-encoder approach which is much more precise but usually slow
         Flash rank solves this by using highly optimized, quantized ONNX models locaaly 
         """
-
+    # top_n : int = 5 => We have retrieved 8 similar documents in qdrant db and from that we will
+    #   be refining it to 5 
+    
         if not documents:
             return []
         
@@ -106,4 +111,39 @@ def _get_ranker() -> Ranker:
 #    top_score = results[0]['score'] => Gets best semantic score
 #    Log completion : reranking completed , duration , best score
 
+
+
+# ****
+# Flash re-Ranker 
+# ****
+
+# Ultra-lite and super fast python library to add re-ranking to your existing search and retrieval 
+# pipelines 
+# It is based on SoTA(State of the Art) LLMs and cross-encoders
+
+# Cross encoder models -> Are the models which have attention mechanism in them
+
+# They have quantized big models into ONNX format (open neural network exchange) - standard format for 
+# making the quantized models 
+# Large AI models are compressed and converted into a highly optimized format called ONNX so they can run
+# much faster and with lower memory usage 
+
+# We also have "vertex ai re-ranker" . It is a google service 
+
+# We can use both "flashrank" and "vertex ai re-ranker" , but there is a certain cost involved with 
+# vertex ai re-ranker whereas flashrank is open source and ultra fast and runs on CPU
+
+# flash-rank => inbuilt in langchain community
+
+
+# **********
+# Bi-encoder and Cross-encoder
+# *************
+
+# Cross - encoder : Each query is compared with each document ie the query is compared with 
+#                   each document so check the re-ranking 
+#                   Here we get the attention scores
+                
+# Bi-encoder : One query id directly compared to all the documents and we get the similarity score 
+#              based on the cosine similarity 
    
