@@ -1,7 +1,13 @@
-from langchain_groq import ChatGroq
+# from langchain_groq import ChatGroq
 from app.agents.state import AgentState 
 from app.config import Settings 
 import logfire 
+
+from app.gateway import get_langchain_llm
+
+# Portkey-backed LLM: fallback + cache + retry — same .invoke() interface as ChatGroq
+llm = get_langchain_llm(feature="planner")  # This is using chatopenai internally 
+
 
 # Initialize the Groq model 
 llm = ChatGroq(

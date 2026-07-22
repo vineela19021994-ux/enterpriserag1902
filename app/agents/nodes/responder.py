@@ -4,6 +4,8 @@ from langchain_groq import ChatGroq
 from app.agents.state import AgentState 
 from app.config import Settings 
 
+from app.gateway import portkey_client, extract_cache_status
+
 # Initialize the Groq model 
 llm = ChatGroq(
     api_key = Settings.GROQ_API_KEY,
@@ -67,18 +69,39 @@ def generate_node(state:AgentState):
         """
 
     with logfire.span("✍️ LLM Synthesis"):
-        try : 
-            response = llm.invoke(prompt)
-            logfire.info("Response synthesized successfully")
+        try:
+            response = portkey_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1
+            )
+            content = response.choices[0].message.content
+            cache_status = extract_cache_status(response)
+            is_cache_hit = cache_status == "HIT"
+
+            if is_cache_hit:
+                logfire.info("⚡ Gateway Cache Hit — response served from Portkey cache.")
+                plan_update = state["plan"] + ["Cache: Hit ⚡"]
+                status = "Cache hit — instant response."
+            else:
+                logfire.info("✅ Response synthesised via LLM.")
+                plan_update = state["plan"]
+                status = "Response generated."
+
             return {
-                "final_answer" : response.content,
-                "status" : "Response generated.",
-                "messages" : [{"role": "assistant","content": response.content}]
+                "final_answer": content,
+                "status": status,
+                "plan": plan_update,
+                "messages": [{"role": "assistant", "content": content}]
             }
 
-        except Exception as e: 
-            logfire.error(f"LLM Generation failed:{e}")
+        except Exception as e:
+            logfire.error(f"LLM Generation failed: {e}")
             raise e
+#  This code sends the prompt to the LLM through the Portkey SDK, extracts the 
+#  generated response, checks the x-portkey-cache-status header to determine whether
+#  the response came from the Portkey cache, logs the result using Logfire, updates 
+# the execution state, and returns the final answer. If any error occurs during the 
+# request, it logs the error and rethrows the exception.
 
 
 # 1) This is the final response generation node in agentic RAG system 

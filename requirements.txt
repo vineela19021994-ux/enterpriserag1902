@@ -48,3 +48,11 @@ logfire                     # Pydantic Logfire for distributed system tracing
 logfire[fastapi]            # Automatic Logfire instrumentation for FastAPI
 logfire[requests]           # To link Streamlit UI traces to the backend
 loguru                      # Enhanced logging for Python
+
+# -- GUARDRAILS --
+nemoguardrails # NVIDIA NeMo guardrails for input/output safety rails 
+langchain-nvidia-ai-endpoints # Langchain integration with NVIDIA end points
+
+# LLM gateway 
+
+portkey-ai

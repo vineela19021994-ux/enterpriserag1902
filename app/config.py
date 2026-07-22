@@ -21,6 +21,14 @@ class Settings:
     # -- Reasoning engine (GROQ) --
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GROQ_MODEL = "llama-3.3-70b-versatile"
+    GROQ_FALLBACK_API_KEY = os.getenv("GROQ_FALLBACK_API_KEY")
+
+    # -- LLM GATEWAY (PORTKEY) -- 
+    PORTKEY_API_KEY = os.getenv("PORTKEY_API_KEY")
+    GROQ_SLUG = "rag" # primary virtual key: @rag/llama-3.3-70b-versatile
+    GROQ_SLUG_2 = "brag" # fallback virtual key: @brag/llama-3.1-8b-instant
+
+
 
     # -- Observability ---
     LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING","true")

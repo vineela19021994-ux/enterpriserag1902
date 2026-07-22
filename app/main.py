@@ -21,12 +21,23 @@ from app.agents.graph import rag_agent
 # This imports Basemodel from pydantic library 
 # Basemodels is used to create data models that automatically : validate data types , Parse input data ,
 #      convert data into python objects , Generate structured JSON responses
+
+from app.guardrails import initialize_rails , guard 
+
+
 from pydantic import BaseModel
 from typing import Optional 
 
 # Initialize FastAPI application
 app = FastAPI(title = "Enterprise Agentic RAG API")
 
+# So the moment our application starts the guardrails will be initialized
+# We are using on_event("startup") decorator to call the initialize_rails function
+# The moment application starts it runs this  
+
+@app.on_event("startup")
+def startup_event():
+    initialize_rails()
 
 # Pydantic model used to define the structure of incoming API request. 
 # Query Request should be validated with the pydantic base model 
@@ -83,15 +94,41 @@ def query(request : QueryRequest):
     config = {"configurable":{"thread_id":thread_id}}
 
     try:
+
+        # Gate 1 : Nemo guardrails - blocks off-topic , jailbreaks and handles dialog 
+
+        # 1) Here it is checking id the rail fired or not and what is the rail response 
+        #    If the rail is not fired , it will directly go to the rag agent and generate response 
+        # 2) But if the rail is fired , and we have also received a rail response , we will log 
+        #    into the logfire that request is blocked by guardrails 
+        #    and we will return the rail_response 
+        # 3) We will also update the agent state "blocked by guardrails".
+
+        rail_fired, rail_response = guard(q)
+        if rail_fired:
+            logfire.info(f"🛡️ Request blocked by guardrails | thread={thread_id}")
+            return {
+                "question": q,
+                "answer": rail_response,
+                "thought_process": ["Intent: Guardrails Fired", "Retrieval: Skipped"],
+                "status": "Blocked by guardrails.",
+                "sources": [],
+            }
         # Run the graph synchronously to perserve  Logfire context variables 
 
         # Final output is going to be given by rag_agent invoking which is going to input the
         #    initial state and it is going to update it over time and the configuration 
         # Graph is taking two things in the end , rag_agent will be invoked and the checkpointer needs
         #    a thread, the thread is put in a configurable which we are passing with the rag_agent 
+
+        # For adding guardrails : Here we are directly hitting the rag_agent , we want to add a layer 
+        #    of guardrails in between
+
+        # Gate 2 : Langgraph RAG pipeline 
+        
         final_output = rag_agent.invoke(initial_state,config = config)
         
-        # Returns this response ie rag_agent is going to return this response
+        # Returns this response ie rag_agent is going to return this response 
         return { 
             "question":q,
             "answer":final_output.get("final_answer"),
