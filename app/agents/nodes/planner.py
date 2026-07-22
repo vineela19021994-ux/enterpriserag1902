@@ -10,11 +10,11 @@ llm = get_langchain_llm(feature="planner")  # This is using chatopenai internall
 
 
 # Initialize the Groq model 
-llm = ChatGroq(
-    api_key = Settings.GROQ_API_KEY,
-    model = Settings.GROQ_MODEL,
-    temperature = 0 
-)
+# llm = ChatGroq(
+#     api_key = Settings.GROQ_API_KEY,
+#     model = Settings.GROQ_MODEL,
+#     temperature = 0 
+# )
 
 
 def planner_node(state : AgentState):

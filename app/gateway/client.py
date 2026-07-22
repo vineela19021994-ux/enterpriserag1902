@@ -96,7 +96,8 @@ def get_langchain_llm(feature: str = "rag") -> ChatOpenAI:
     # responses. This allows us to use LangChain features while benefiting from Portkey 
     # features like caching, retries, fallback, logging, and routing.
 
-    def extract_cache_status(response) -> str:
+
+def extract_cache_status(response) -> str:
     """
     Pull x-portkey-cache-status from the Portkey native client response headers.
     Tries multiple attribute paths defensively — returns 'MISS' if not found.
@@ -109,26 +110,27 @@ def get_langchain_llm(feature: str = "rag") -> ChatOpenAI:
                 return status.upper()
     return "MISS"
 
-    # 1) Check whether the answer came from the Portkey cache or from the AI model
-    #    This creates a function that takes a response and returns a string . 
-    #    Example return values : HIT , MISS
 
-    #    When portkey sends a response , it includes a special header like below 
-    #    x-portkey-cache-status : HIT
-    #    or 
-    #    x-portkey-cache-status : MISS
+# 1) Check whether the answer came from the Portkey cache or from the AI model
+#    This creates a function that takes a response and returns a string . 
+#    Example return values : HIT , MISS
 
-    #    Meaning:
-    #     HIT → Answer came from the cache.
-    #     MISS → Portkey called the AI model.
+#    When portkey sends a response , it includes a special header like below 
+#    x-portkey-cache-status : HIT
+#    or 
+#    x-portkey-cache-status : MISS
 
-    #     "x-portkey-cache-status : HIT" => The x-portkey-cache-status header is added 
-    #     automatically by the Portkey Gateway. When caching is enabled in the gateway 
-    #     configuration, Portkey checks the cache for each request and includes a 
-    #     header such as HIT or MISS in the response. The application only reads this 
-    #     header; it does not create it.
+#    Meaning:
+#     HIT → Answer came from the cache.
+#     MISS → Portkey called the AI model.
 
-    # 2) extract_cache_status() checks the Portkey response headers to determine whether 
-    #    the response came from the cache or from a fresh LLM call. It looks for the 
-    #    x-portkey-cache-status header, returns HIT or MISS, and defaults to MISS if 
-    #    the header is not found."
+#     "x-portkey-cache-status : HIT" => The x-portkey-cache-status header is added 
+#     automatically by the Portkey Gateway. When caching is enabled in the gateway 
+#     configuration, Portkey checks the cache for each request and includes a 
+#     header such as HIT or MISS in the response. The application only reads this 
+#     header; it does not create it.
+
+# 2) extract_cache_status() checks the Portkey response headers to determine whether 
+#    the response came from the cache or from a fresh LLM call. It looks for the 
+#    x-portkey-cache-status header, returns HIT or MISS, and defaults to MISS if 
+#    the header is not found."
